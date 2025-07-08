@@ -1,0 +1,47 @@
+name: Deploy Infrastructure
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    name: 'Terraform OIDC Deploy'
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write       # Required for OIDC
+      contents: read        # To clone the repo
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🔐 Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{secret.AWS_ACCOUNT_ID}}>:role/GitHubOIDCDeploymentRole
+          aws-region: us-west-2
+
+      - name: ⚙️ Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.0
+
+      - name: 🌱 Terraform Init
+        run: terraform init
+
+      - name: 🧹 Terraform Format Check
+        run: terraform fmt -check
+
+      - name: 🔍 Terraform Validate
+        run: terraform validate
+
+      - name: 📋 Terraform Plan
+        run: terraform plan
+
+      - name: 🚀 Terraform Apply
+        run: terraform apply -auto-approve
+      - name: 🚀 Terraform Destroy
+        run: terraform apply -auto-approve
