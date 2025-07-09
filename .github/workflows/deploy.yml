@@ -33,6 +33,21 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.8.0
+          
+      - name: 🌱 Terraform Init
+        run: terraform init
+
+      - name: 🧹 Terraform Format Check
+        run: terraform fmt -check
+
+      - name: 🔍 Terraform Validate
+        run: terraform validate
+
+      - name: 📋 Terraform Plan
+        run: terraform plan
+
+      - name: 🚀 Terraform Apply
+        run: terraform apply -auto-approve
 
       - name: 🚀 Terraform Destroy
         run: terraform destroy -auto-approve
