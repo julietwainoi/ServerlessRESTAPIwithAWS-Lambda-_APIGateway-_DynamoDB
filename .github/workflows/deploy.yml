@@ -17,6 +17,11 @@ jobs:
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v3
+        
+      - name: 🧳 Zip Lambda source
+        run: |
+          cd lambda
+          zip ../lambda.zip handler.js
 
       - name: 🔐 Configure AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v2
