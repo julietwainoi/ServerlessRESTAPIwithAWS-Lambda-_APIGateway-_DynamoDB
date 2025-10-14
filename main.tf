@@ -31,6 +31,7 @@ resource "aws_iam_policy" "lambda_sns_publish_policy" {
         ],
         Resource : aws_sns_topic.alerts.arn
       }
+      
     ]
   })
 }
@@ -210,6 +211,7 @@ resource "aws_cognito_user_pool_domain" "service_owned_domain" {
 
 resource "aws_cognito_user_pool_client" "password_grant_client" {
   name         = "password-grant-client"
+
   user_pool_id  = aws_cognito_user_pool.new_user_pool.id
   //user_pool_id = data.aws_cognito_user_pool.existing_user_pool.id
 
