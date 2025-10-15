@@ -92,18 +92,35 @@ This project uses GitHub Actions for continuous deployment.
 ✅ Workflow Triggers
 Runs automatically on push to the main branch
 
-🔐 Secrets Configuration
+
 In your GitHub repo, navigate to:
 
-Settings → Secrets and Variables → Actions
+permissions:
+  id-token: write
+  contents: read
 
-Add the following secrets:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-AWS_ACCESS_KEY_ID
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::<YOUR_ACCOUNT_ID>:role/github-actions-terraform-role
+          aws-region: us-west-2
 
-AWS_SECRET_ACCESS_KEY
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-These must belong to an IAM user with adequate Terraform permissions.
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+
 
 📂 Workflow File
 GitHub Actions workflow is located at:
@@ -114,7 +131,7 @@ It performs the following steps:
 Checks out the repo
 
 Installs Terraform
-
+y
 Runs terraform init, plan, and apply
 
 ✅ Status Badge
@@ -148,6 +165,48 @@ MIT License
 
 
 ---
+🔒 Authentication & Authorization with Amazon Cognito
 
-Let me know if you'd like help generating the `deploy.yml` file or auto-confirming SNS subscriptions (requires additional scripting).
+To secure API Gateway endpoints, this project uses Amazon Cognito User Pools for authentication and authorization.
 
+🧠 How It Works
+
+Users authenticate via Cognito (using ADMIN_NO_SRP_AUTH or USER_PASSWORD_AUTH).
+
+Cognito returns three tokens:
+
+IdToken – represents the user’s identity (used with API Gateway)
+
+AccessToken – used to call Cognito’s own APIs (e.g. get-user)
+
+RefreshToken – used to renew tokens when they expire
+
+The IdToken is passed to API Gateway as a Bearer token in the Authorization header.
+
+API Gateway validates the token signature against the Cognito User Pool.
+
+🧩 Example: Authenticating and Calling the API
+1. Authenticate and retrieve tokens
+aws cognito-idp admin-initiate-auth \
+  --region us-west-2 \
+  --cli-input-json '{
+    "UserPoolId": "us-west-2_XXXXXXX",
+    "ClientId": "YOUR_CLIENT_ID",
+    "AuthFlow": "ADMIN_NO_SRP_AUTH",
+    "AuthParameters": {
+      "USERNAME": "user@example.com",
+      "PASSWORD": "Password123."
+    }
+  }'
+
+
+This command returns an IdToken, AccessToken, and RefreshToken.
+
+2. Use the IdToken to call your API Gateway endpoint
+curl -X POST "https://your-api-id.execute-api.us-west-2.amazonaws.com/prod/items" \
+  -H "Authorization: <ID_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"id":"item123","name":"Laptop","price":999.99}'
+
+
+✅ If the IdToken is valid, the request is authorized and processed by your Lambda.
