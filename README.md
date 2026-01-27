@@ -190,8 +190,8 @@ API Gateway validates the token signature against the Cognito User Pool.
 aws cognito-idp admin-initiate-auth \
   --region us-west-2 \
   --cli-input-json '{
-    "UserPoolId": "us-west-2_XXXXXXX",
-    "ClientId": "YOUR_CLIENT_ID",
+    "UserPoolId": "us-west-2_XXXXXXX",#used to register users
+    "ClientId": "YOUR_CLIENT_ID",#app used to give back the tokens just like when trying to login or registering in an app
     "AuthFlow": "ADMIN_NO_SRP_AUTH",
     "AuthParameters": {
       "USERNAME": "user@example.com",
